@@ -1,0 +1,28 @@
+[package]
+name = "rustLy"
+version = "0.1.0"
+authors = ["Slade Getz"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rustLy-tui = { path = "./rustLy-tui" }
+termbox = "0.2.0"
+
+[[bin]]
+name = "rustLy"
+path = "rustLy-tui/src/bin/rustLy.rs"
+
+[workspace]
+members = ["rustLy-tui", "rustLy-conf"]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Slade Getz"]
+edition = "2021"
+rust-version = "1.69"
+
+[workspace.dependencies]
+rustLy-tui = { path = "./rustLy-tui" }
+rustLy-conf = { path = "./rustLy-conf" }

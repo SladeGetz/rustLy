@@ -1,0 +1,18 @@
+[package]
+name = "rustLy-conf"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { version = "1.0.163", features = ["derive"] }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# [dependencies]
+# confy = "0.5.1"
+
+[dependencies.confy]
+version = "0.5.1"
+features = ["yaml_conf"]
+default-features = false
