@@ -49,12 +49,18 @@ fn down_section(s: &mut Section) {
 pub fn launch() {
     let colors: [termbox::Attribute; 8] = [BLACK, WHITE, BLUE, CYAN, GREEN, MAGENTA, RED, YELLOW];
 
+    // let LETTERS: HashSet<char> = vec![
+    //     'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 
+    //     'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'O'
+    // ].into_iter().collect();
+
     let mut username = String::new();
     username.push_str("slarch");
     let mut password = String::new();
     let mut section: Section = Section::LOGIN;
     let mut needs_update: bool = true;
     let mut index = 0;
+    let mut password_len = 0;
 
     // first load configs
     let conf: configs::Config = configs::get_configs();
@@ -96,10 +102,10 @@ pub fn launch() {
     let right_up_line: termbox::Cell = termbox::Cell { ch: 0x2510, fg: fg, bg: bg };
     let right_down_line: termbox::Cell = termbox::Cell { ch: 0x2518, fg: fg, bg: bg };
 
-    let password_char: termbox::Cell = termbox::Cell { ch: pchar as u32, fg: fg, bg: bg };
+    let password_cell: termbox::Cell = termbox::Cell { ch: pchar as u32, fg: fg, bg: bg };
 
     draw::draw_box(&mut tb, &box_width, &box_height, &box_x, &box_y, &box_x2, &box_y2, &fg, &bg, &horizontal_line, &vertical_line, &left_up_line, &left_down_line, &right_up_line, &right_down_line);
-    draw::update(&mut tb, &box_width, &box_height, &box_x, &box_y, &box_x2, &box_y2, &fg, &bg, &username, &password, &index, &section, &mut prev_x, &mut prev_y, &mut prev_char);
+    draw::update(&mut tb, &box_width, &box_height, &box_x, &box_y, &box_x2, &box_y2, &fg, &bg, &username, &password_cell, &password_len, &index, &section, &mut prev_x, &mut prev_y, &mut prev_char);
 
     tb.present();
     loop {
@@ -108,21 +114,23 @@ pub fn launch() {
                 if event.key == KEY_ESC {
                     break;
                 }
-                if event.key == KEY_F1 {
+                else if event.key == KEY_F1 {
                     break;
                 }
-                if event.key == KEY_F2 {
+                else if event.key == KEY_F2 {
                     break;
                 }
-                if event.key == KEY_ARROW_UP {
+                else if event.key == KEY_ARROW_UP {
                     up_section(&mut section);
+                    index = 0;
                     needs_update = true;
                 }
-                if event.key == KEY_ARROW_DOWN {
+                else if event.key == KEY_ARROW_DOWN {
                     down_section(&mut section);
+                    index = 0;
                     needs_update = true;
                 }
-                if event.key == termbox::KEY_BACKSPACE || event.key == termbox::KEY_BACKSPACE2 {
+                else if event.key == termbox::KEY_BACKSPACE || event.key == termbox::KEY_BACKSPACE2 {
                     match section {
                         Section::LOGIN => {
                             if index > 0 {
@@ -131,11 +139,19 @@ pub fn launch() {
                                 needs_update = true;
                             }
                         },
+                        Section::PASSWORD => {
+                            if index > 0 {
+                                index = index - 1;
+                                password.remove(index as usize);
+                                password_len = password_len - 1;
+                                needs_update = true;
+                            }
+                        },
                         _ => {},
                     }
                 }
  
-                if event.key == KEY_ARROW_LEFT {
+                else if event.key == KEY_ARROW_LEFT {
                     match section {
                         Section::LAUNCHER => {},
                         _ => {
@@ -146,16 +162,39 @@ pub fn launch() {
                     }
                     needs_update = true;
                 }
-                if event.key == KEY_ARROW_RIGHT {
+                else if event.key == KEY_ARROW_RIGHT {
                     match section {
                         Section::LAUNCHER => {},
                         Section::LOGIN => { if index < (username.len() as i32) { index = index + 1; } },
                         Section::PASSWORD => { if index < (password.len() as i32) { index = index + 1; } },
                     }
                     needs_update = true;
+                } else {
+                    match event.ch {
+                        None => {},
+                        Some(c) => {
+                            if c > (32 as char) && c < (127 as char) {
+                                match section {
+                                    Section::LAUNCHER => {},
+                                    Section::LOGIN => {
+                                        username.insert(index as usize, c);
+                                        index = index + 1;
+                                        needs_update = true;
+                                    },
+                                    Section::PASSWORD => {
+                                        password.insert(index as usize, c);
+                                        password_len = password_len + 1;
+                                        index = index + 1;
+                                        needs_update = true;
+                                    },
+                                }
+                            }
+                        },
+                    }
                 }
+                
                 if needs_update {
-                    draw::update(&mut tb, &box_width, &box_height, &box_x, &box_y, &box_x2, &box_y2, &fg, &bg, &username, &password, &index, &section, &mut prev_x, &mut prev_y, &mut prev_char);
+                    draw::update(&mut tb, &box_width, &box_height, &box_x, &box_y, &box_x2, &box_y2, &fg, &bg, &username, &password_cell, &password_len, &index, &section, &mut prev_x, &mut prev_y, &mut prev_char);
                     tb.present();
                     needs_update = false;
                 }
